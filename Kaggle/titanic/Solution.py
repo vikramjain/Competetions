@@ -7,42 +7,17 @@ from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.style.use('ggplot')
 import seaborn as sns
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.grid_search import GridSearchCV
-from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
 from sklearn.cross_validation import cross_val_score
 from sklearn import metrics
-from sklearn.ensemble import ExtraTreesClassifier
 import matplotlib.pyplot as plt
-from sklearn import linear_model, decomposition, datasets
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.cross_validation import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.grid_search import GridSearchCV
-import matplotlib.pyplot as plt
-from sklearn import linear_model, decomposition, datasets
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 
 data = pd.read_csv('train.csv')
 data_test = pd.read_csv('test.csv')
@@ -217,29 +192,13 @@ plt.legend()
 plt.show()
 '''
 
-#train = result.iloc[:891,]
-#test = result.iloc[892:,:]
-#data = pd.concat([result, pd.DataFrame(y)], axis=1)
-
 data = result
-'''
-# dummy encoding 
-embarked_dummies = pd.get_dummies(data['Embarked'],prefix='Embarked',drop_first=True)
-data = pd.concat([data,embarked_dummies],axis=1)
-data.drop('Embarked',axis=1,inplace=True)
-
-# encoding in dummy variable
-titles_dummies = pd.get_dummies(data['Title'],prefix='Title',drop_first=True)
-data = pd.concat([data,titles_dummies],axis=1)    
-# removing the title variable
-data.drop('Title',axis=1,inplace=True)
-
 # encoding into 3 categories:
 pclass_dummies = pd.get_dummies(data['Pclass'],prefix="Pclass",drop_first=True)
 # adding dummy variables
 data = pd.concat([data,pclass_dummies],axis=1)    
 data.drop('Pclass',axis=1,inplace=True)
-'''
+
 sex_dummies = pd.get_dummies(data['Sex'],prefix="Sex", drop_first=True)
 # adding dummy variables
 data = pd.concat([data,sex_dummies],axis=1)    
@@ -274,6 +233,11 @@ def title_map(title):
     else:
         return 2
 data['Title'] = data['Title'].apply(title_map)
+titles_dummies = pd.get_dummies(data['Title'],prefix='Title',drop_first=True)
+data = pd.concat([data,titles_dummies],axis=1)    
+# removing the title variable
+data.drop('Title',axis=1,inplace=True)
+
 def embarked_map(title):
     if title in ['S']:
         return 1
@@ -282,13 +246,16 @@ def embarked_map(title):
     elif title in ['Q']:
         return 3 
 data['Embarked'] = data['Embarked'].apply(embarked_map)
-'''
+embarked_dummies = pd.get_dummies(data['Embarked'],prefix='Embarked',drop_first=True)
+data = pd.concat([data,embarked_dummies],axis=1)
+data.drop('Embarked',axis=1,inplace=True)
+
 age_dummies = pd.get_dummies(data['Age'],prefix="Age", drop_first=True)
 # adding dummy variables
 data = pd.concat([data,age_dummies],axis=1)    
 data.drop('Age',axis=1,inplace=True)
 print(data.dtypes)
-'''
+
 #scaler = MinMaxScaler() 
 #scaled_values = scaler.fit_transform(data) 
 #data.loc[:,:] = scaled_values
@@ -335,100 +302,3 @@ submission = pd.DataFrame({
         "Survived": Y_pred
     })
 submission.to_csv('titanic.csv', index=False)
-
-'''
-from sklearn.feature_selection import RFE
-from sklearn.linear_model import LogisticRegression
-
-y = finaldata.Survived
-finaldata.drop('Survived', axis=1, inplace=True)
-
-# fit an Extra Trees model to the data
-model = ExtraTreesClassifier()
-model.fit(finaldata, y)
-features = pd.DataFrame()
-features['feature'] = train.columns
-features['importance'] = model.feature_importances_
-#features.sort(['importance'],ascending=False)
-# display the relative importance of each attribute
-print(features)
-
-
-
-logistic = linear_model.LogisticRegression()
-pca = decomposition.PCA()
-pipe = Pipeline(steps=[('pca', pca), ('logistic', logistic
-'''
-#X_train, X_test, y_train, y_test = train_test_split(finaldata, y, random_state=0, test_size=0.25)
-'''
-pca.fit(X_train)
-plt.figure(1, figsize=(4, 3))
-plt.clf()
-plt.axes([.2, .2, .7, .7])
-plt.plot(pca.explained_variance_, linewidth=2)
-plt.axis('tight')
-plt.xlabel('n_components')
-plt.ylabel('explained_variance_')
-plt.show()
-# Prediction
-n_components = [2, 10, 14]
-Cs = np.logspace(-4, 4, 3)
-
-# Parameters of pipelines can be set using ‘__’ separated parameter names:
-estimator = GridSearchCV(pipe, dict(pca__n_components=n_components, logistic__C=Cs))
-estimator.fit(X_train, y_train)
-predictions = estimator.predict(X_test)
-
-confusion_matrix = confusion_matrix(y_test, predictions)
-print(confusion_matrix)
-print('Accuracy of logistic regression classifier on test set: {:.2f}'.format(estimator.score(X_test, y_test)))
-
-
-print(classification_report(y_test, predictions))
-print(predictions)
-
-output = estimator.predict(test).astype(int)
-df_output = pd.DataFrame()
-df_output['PassengerId'] = data_test['PassengerId']
-print(df_output.shape)
-print(output.shape)
-output=output.astype(int)
-print(output)
-df_output['Survived'] = pd.DataFrame(output)
-df_output['Survived'] = df_output['Survived'].map(lambda s : 1 if s == 1.0 else 0)
-df_output[['PassengerId','Survived']].to_csv('gender_submission.csv',index=False)
-'''
-
-
-'''
-rfc = RandomForestClassifier(n_jobs=-1,max_features= 'sqrt' ,n_estimators=50, oob_score = True) 
-
-param_grid = { 
-    'n_estimators': [200, 700],
-    'max_features': ['auto', 'sqrt', 'log2'],
-    'criterion': ['gini', 'entropy']
-}
-
-CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv= 5)
-CV_rfc.fit(X_train, y_train)
-#print (CV_rfc.best_params_)
-predictions = CV_rfc.predict(X_test)
-
-confusion_matrix = confusion_matrix(y_test, predictions)
-print(confusion_matrix)
-print('Accuracy of logistic regression classifier on test set: {:.2f}'.format(CV_rfc.score(X_test, y_test)))
-
-
-print(classification_report(y_test, predictions))
-print(predictions)
-'''
-''''
-# feature extraction
-model = LogisticRegression()
-rfe = RFE(model, 14)
-fit = rfe.fit(finaldata, y)
-print("Num Features: %d" % fit.n_features_)
-print("Features Names: %s " % finaldata.columns.tolist() )
-print("Selected Features: %s" % fit.support_) 
-print("Feature Ranking: %s" % fit.ranking_)
-'''
